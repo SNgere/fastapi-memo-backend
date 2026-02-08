@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: memo_db
+    restart: unless-stopped
+    env_file:
+      - ./secrets.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"  # Optional: remove in production if behind internal network or proxy
+
+  pgadmin:
+    container_name: "pgadmin"
+    image: "dpage/pgadmin4:snapshot" 
+    restart: always
+    env_file:
+      - ./secrets.env
+    ports:
+      - "5050:80"
+
+  fastapi:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    image: svaice/fast-memo:v1
+    ports:
+      - "8000:8000"
+    container_name: "fastapi-app"
+    env_file:
+      - ./secrets.env  
+    restart: unless-stopped
+    command: >
+      uvicorn main:app --host 0.0.0.0 --port 8000 --workers 2
+    volumes:
+      - ./memo_uploads:/app/memo_uploads  
+
+
+volumes:
+  pgdata:
